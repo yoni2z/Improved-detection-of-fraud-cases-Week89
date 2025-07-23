@@ -46,12 +46,15 @@ df_credit['hour_of_day'] = (df_credit['Time'] // 3600) % 24
 df_credit['log_amount'] = np.log1p(df_credit['Amount'])
 
 # Normalization and Scaling: Fraud_Data.csv
-scaler = StandardScaler()
-numerical_cols = ['purchase_value', 'age', 'time_since_signup', 'user_transaction_count', 'device_transaction_count', 'time_diff']
-df_fraud[numerical_cols] = scaler.fit_transform(df_fraud[numerical_cols])
+scaler_fraud = StandardScaler()
+numerical_cols_fraud = ['purchase_value', 'age', 'time_since_signup', 'user_transaction_count', 'device_transaction_count', 'time_diff', 'hour_of_day', 'day_of_week']
+df_fraud[numerical_cols_fraud] = scaler_fraud.fit_transform(df_fraud[numerical_cols_fraud])
 
 # Normalization and Scaling: creditcard.csv
-df_credit[['Amount', 'log_amount']] = scaler.fit_transform(df_credit[['Amount', 'log_amount']])
+scaler_credit = StandardScaler()
+numerical_cols_credit = ['Time', 'Amount', 'log_amount', 'hour_of_day', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10',
+                        'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28']
+df_credit[numerical_cols_credit] = scaler_credit.fit_transform(df_credit[numerical_cols_credit])
 
 # Encode Categorical Features: Fraud_Data.csv
 categorical_cols = ['source', 'browser', 'sex', 'country']
@@ -65,6 +68,10 @@ y_credit = df_credit['Class']
 
 X_fraud_train, X_fraud_test, y_fraud_train, y_fraud_test = train_test_split(X_fraud, y_fraud, test_size=0.2, stratify=y_fraud, random_state=42)
 X_credit_train, X_credit_test, y_credit_train, y_credit_test = train_test_split(X_credit, y_credit, test_size=0.2, stratify=y_credit, random_state=42)
+
+# Verify scaling
+print("Fraud_Data train scaling check (mean, std):\n", X_fraud_train[numerical_cols_fraud].mean(), "\n", X_fraud_train[numerical_cols_fraud].std())
+print("creditcard train scaling check (mean, std):\n", X_credit_train[numerical_cols_credit].mean(), "\n", X_credit_train[numerical_cols_credit].std())
 
 # Handle Class Imbalance with SMOTE
 smote = SMOTE(random_state=42)
@@ -86,7 +93,7 @@ pd.DataFrame(y_credit_test).to_csv(os.path.join(OUTPUT_PATH, 'y_credit_test.csv'
 df_fraud.to_csv(os.path.join(OUTPUT_PATH, 'Fraud_Data_engineered.csv'), index=False)
 df_credit.to_csv(os.path.join(OUTPUT_PATH, 'creditcard_engineered.csv'), index=False)
 
-# Verify new features
+# Verify new features and class distribution
 print("Fraud_Data new features:\n", df_fraud[['user_transaction_count', 'device_transaction_count', 'time_diff', 'hour_of_day', 'day_of_week', 'time_since_signup']].head())
 print("creditcard new features:\n", df_credit[['hour_of_day', 'log_amount']].head())
 print("Fraud_Data class distribution after SMOTE:\n", y_fraud_train_resampled.value_counts(normalize=True))
